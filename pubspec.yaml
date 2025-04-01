@@ -38,6 +38,7 @@ dependencies:
   dartx: ^1.2.0
   dartz: ^0.10.1
   flutter_bloc: ^9.1.0
+  get_it: ^8.0.3
 
 dev_dependencies:
   flutter_test:

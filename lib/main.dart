@@ -1,8 +1,10 @@
+import 'package:api_test/di.dart';
 import 'package:api_test/src/features/posts/presentation/pages/posts_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  initDependencies();
   runApp(const App());
 }
 

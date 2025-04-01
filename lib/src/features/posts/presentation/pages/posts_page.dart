@@ -1,9 +1,9 @@
-import 'dart:convert';
-
-import 'package:api_test/src/core/network/api_endpoints.dart';
-import 'package:api_test/src/features/posts/data/model/post_model.dart';
+import 'package:api_test/di.dart';
+import 'package:api_test/src/features/posts/presentation/blocs/post_bloc.dart';
+import 'package:api_test/src/features/posts/presentation/blocs/post_event.dart';
+import 'package:api_test/src/features/posts/presentation/blocs/post_state.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PostsPage extends StatefulWidget {
   const PostsPage({super.key});
@@ -13,51 +13,38 @@ class PostsPage extends StatefulWidget {
 }
 
 class _PostsPageState extends State<PostsPage> {
-  var client = http.Client();
-  List<PostModel> posts = [];
-
-  @override
-  void initState() {
-    _fetchData();
-    super.initState();
-  }
-
-  void _fetchData() async {
-    //GET API URL
-    final url = Uri.parse(ApiEndpoints.posts);
-    try {
-      final response = await client.get(url);
-      if (response.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(response.body);
-
-        setState(() {
-          posts = list.map((e) => PostModel.fromJson(e) as PostModel).toList();
-        });
-      } else {
-        print('Invalid Response !');
-      }
-    } catch (e) {
-      throw Exception('Could not fetch');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home Page'),
-      ),
-      body: ListView.builder(
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              leading: Text('${posts[index].id}'),
-              title: Text(posts[index].title),
-              subtitle: Text(posts[index].body),
-            ),
-          );
-        },
-        itemCount: posts.length,
+    return BlocProvider(
+      create: (context) => sl<PostBloc>()..add(PostFetchEvent()),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Home Page'),
+        ),
+        body: BlocBuilder<PostBloc, PostState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (state.apiFailure != null) {
+              return Center(child: Text(state.apiFailure!.message));
+            }
+
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    leading: Text('${state.posts![index].id}'),
+                    title: Text(state.posts![index].title),
+                    subtitle: Text(state.posts![index].body),
+                  ),
+                );
+              },
+              itemCount: state.posts!.length,
+            );
+          },
+        ),
       ),
     );
   }

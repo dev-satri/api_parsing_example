@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class PostBloc extends Bloc<PostEvent, PostState> {
   PostBloc(this._postUsecase) : super(PostState()) {
     on<PostFetchEvent>(fetchPost);
+    on<PostAddEvent>(addPost);
   }
 
   final PostUsecase _postUsecase;
@@ -18,5 +19,13 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       (data) => emit(state.copyWith(isLoading: false, posts: data)),
     );
   }
-}
 
+  void addPost(PostAddEvent event, Emitter<PostState> emit) async {
+    emit(state.copyWith(isAdding: true));
+    final response = await _postUsecase.addPost();
+    response.fold(
+      (error) => emit(state.copyWith(isAdding: false, addPostFailure: error)),
+      (data) => emit(state.copyWith(isAdding: false, addPostModel: data)),
+    );
+  }
+}

@@ -20,8 +20,63 @@ class _PostsPageState extends State<PostsPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Home Page'),
+          actions: [
+            BlocConsumer<PostBloc, PostState>(
+              buildWhen: (previous, current) =>
+                  previous.isAdding != current.isAdding,
+              listenWhen: (previous, current) =>
+                  previous.addPostFailure != current.addPostFailure ||
+                  previous.addPostModel != current.addPostModel,
+              listener: (context, state) {
+                if (state.addPostFailure != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4))),
+                      content: Text(state.apiFailure!.message)));
+                }
+                if (state.addPostModel != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4))),
+                      content: Text('Successfully Added')));
+                }
+              },
+              builder: (context, state) {
+                return IconButton(
+                    onPressed: () {
+                      context.read<PostBloc>().add(PostAddEvent());
+                    },
+                    icon: Icon(state.isAdding ? Icons.refresh : Icons.add));
+              },
+            ),
+            IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4))),
+                      content: Text('This is a Snackbar')));
+                },
+                icon: Icon(Icons.notifications)),
+          ],
         ),
-        body: BlocBuilder<PostBloc, PostState>(
+        body: BlocConsumer<PostBloc, PostState>(
+          listenWhen: (p, c) => p.apiFailure != c.apiFailure,
+          listener: (context, state) {
+            if (state.apiFailure != null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(4))),
+                  content: Text(state.apiFailure!.message)));
+            }
+          },
           builder: (context, state) {
             if (state.isLoading) {
               return Center(child: CircularProgressIndicator());
